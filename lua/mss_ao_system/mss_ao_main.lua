@@ -11,24 +11,35 @@ AOSystem.Stations = {}
 local cur_map = game.GetMap()
 
 timer.Create("AOSystemInit", 2, 1, function()
+	-- грузим данные
 	if file.Exists("mss_ao_system/"..cur_map..".txt", "DATA") then		
 		local fl = file.Read("mss_ao_system/"..cur_map..".txt", "DATA")
 		local tbl = fl and util.JSONToTable(fl) or {}
-		if table.IsEmpty(tbl) then print("No data found in file =(") end
 		AOSystem.Stations = tbl
-		if not table.IsEmpty(AOSystem.Stations) then
+		if table.IsEmpty(AOSystem.Stations) then 
+			MsgC(Color(0, 220, 0, 255), "MSS AO: Data file corrupted.\nLoad failed! \n")
+			return
+		else
 			MsgC(Color(0, 220, 0, 255), "MSS AO: Data file detected.\nLoad successful! \n")
 		end
 	else
 		MsgC(Color(220, 0, 0, 255), "MSS AO: No data file detected for current map\nLoad failed! \n")
 		return
 	end
-	--
-	if file.Exists("mss_ao_system/maps/maps_logic.lua", "LUA") then
-		include("mss_ao_system/maps/maps_logic.lua")
+	-- грузим логику
+	if file.Exists("mss_ao_system/maps/sv_maps_logic.lua", "LUA") then
+		include("mss_ao_system/maps/sv_maps_logic.lua")
 		MsgC(Color(0, 220, 0, 255), "MSS AO: logic file detected.\nInit successful! \n")
 	else
 		MsgC(Color(220, 0, 0, 255), "MSS AO: No logic file detected\nInit failed! \n")
+		return
+	end
+	-- грузим костыли
+	if file.Exists("mss_ao_system/maps/sv_default_ao_fix.lua", "LUA") then
+		include("mss_ao_system/maps/sv_default_ao_fix.lua")
+		MsgC(Color(0, 220, 0, 255), "MSS AO: additional file detected.\nInit successful! \n")
+	else
+		MsgC(Color(220, 0, 0, 255), "MSS AO: No additional file detected\nInit failed! \n")
 		return
 	end
 	SetGlobalBool("AOSystemIsDisabled", false)
@@ -88,6 +99,9 @@ hook.Add("PlayerDisconnected","AOSystemResert",function(ply)
 			end
 			if not admins then
 				SetGlobalBool("AOSystemIsDisabled", false)
+				for k, v in pairs(AOSystem.Stations) do
+					if v.enabled == false then v.enabled = true end
+				end		
 				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
 			end
 		end
@@ -97,7 +111,10 @@ end)
 -- Команды на вкл/выкл АО
 concommand.Add("aosystem_disable", function(ply, _, args)
 	if ply:IsAdmin() or ply.DispPost then
-        SetGlobalBool ("AOSystemIsDisabled", true)
+        SetGlobalBool("AOSystemIsDisabled", true)
+		for k, v in pairs(AOSystem.Stations) do
+			if v.enabled == true then v.enabled = false end
+		end		
 		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Отключен")
 	else
 		ULib.tsayError(ply, "У вас нет доступа к этой команде!" )
@@ -106,20 +123,18 @@ end)
 
 concommand.Add("aosystem_enable", function(ply, _, args)
 	if ply:IsAdmin() or ply.DispPost then
-        SetGlobalBool ("AOSystemIsDisabled", false)
+        SetGlobalBool("AOSystemIsDisabled", false)
+		for k, v in pairs(AOSystem.Stations) do
+			if v.enabled == false then v.enabled = true end
+		end		
 		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
 	else
 		ULib.tsayError(ply, "У вас нет доступа к этой команде!" )
     end
 end)
 
-function AOSystem.IsDisabled()
-	local X = GetGlobalBool("AOSystemIsDisabled", false)
-	return X
-end
-
 function AOSystem.CheckDependSignals(signals)
-	if signals == nil then return true end
+	if signals == nil or signals == {} then return false end
 	local checked = true
 	for k, v in pairs(signals) do
 		if Metrostroi.SignalEntitiesByName[v].Occupied then
@@ -142,7 +157,6 @@ function AOSystem.CloseRoute(RouteName)
 				if RouteInfo.RouteName and RouteInfo.RouteName:upper() == RouteName then
 					found = true
 					if ent.LastOpenedRoute and ent.LastOpenedRoute == RouteID then
-					--if not ent.Occupied and AOSystem.CheckSwitchesStates(RouteInfo.Switches) and ent.LastOpenedRoute == RouteID then
 						ent:CloseRoute(RouteID)
 						ent.LastOpenedRoute = -1
 						closed = true	
@@ -178,7 +192,7 @@ function AOSystem.OpenRoute(RouteName)
 			end
 		end
 	end
-	if found and opened then 	-- избавился от срача в чате! =)
+	if found and opened then
 		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Готовится маршрут "..RouteName.."")
 	end	
 end
@@ -198,15 +212,13 @@ function AOSystem.SetSwitchesToRoute(switches)
 		local statedesired = v:sub(-1,-1)
 		local switchname = v:sub(1,-2)
 		local switchent = Metrostroi.GetSwitchByName(switchname)
-		if not IsValid(switchent) then break end
+		if not IsValid(switchent) then continue end
 		local statereal = switchent:GetInternalVariable("m_eDoorState") or -1
 		if statedesired == "+" and statereal != 0 then
 			AOSystem.SetSwitchState(switchent, "main")
-			--ULib.tsayColor(nil,false,Color(0, 225, 0), "-- Switch "..switchent.Name.." is set to main")
 		end
 		if statedesired == "-" and statereal != 2 then
 			AOSystem.SetSwitchState(switchent, "alt")
-			--ULib.tsayColor(nil,false,Color(0, 225, 0), "-- Switch "..switchent.Name.." is set to alt")
 		end
 	end
 end
@@ -217,7 +229,6 @@ function AOSystem.RouteIsOpened(RouteName)
 		if signal.Routes then
 			for RouteID, RouteInfo in pairs(signal.Routes) do
 				if RouteInfo.RouteName and RouteInfo.RouteName:upper() == RouteName then
-					--if (not signal.Occupied and signal.Route == RouteID) or (signal.Occupied and signal.LastOpenedRoute == RouteID) then
 					if (RouteInfo.Switches and AOSystem.CheckSwitchesStates(RouteInfo.Switches)) or (signal.LastOpenedRoute and signal.LastOpenedRoute == RouteID) or signal.Route == RouteID then
 						Opened = true
 					end
@@ -236,6 +247,7 @@ function AOSystem.CheckSwitchesStates(switches)
 		local switchname = v:sub(1,-2)
 		local statedesired = v:sub(-1,-1)
 		local switchent = Metrostroi.GetSwitchByName(switchname)
+		if not IsValid(switchent) then continue end
 		local statereal = switchent:GetInternalVariable("m_eDoorState") or -1
 		if statedesired == "+" and statereal != 0 then
 			checked = false
