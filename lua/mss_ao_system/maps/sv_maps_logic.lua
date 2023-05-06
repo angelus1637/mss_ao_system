@@ -13,6 +13,10 @@ hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
 	local station
 	local tbl
 	local ply
+	
+	-- if not CheckTime then CheckTime = 0 end
+	-- if CheckTime == 0 then CheckTime = CurTime() end
+	-- if CheckTime > 0 and (CurTime() - CheckTime) >= 3 then
 
 	for k, v in pairs(AOSystem.Stations) do
 		if v.enabled == false then continue end
@@ -33,9 +37,11 @@ hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
 		end
 		if v.aotype == "by-block-sections" then
 			if Signal.Name == v.trigger then
+				if not v.deproute or v.aoroute == "" then return end
 				if AOSystem.GetSignalFreeBS(v.trigger) < v.blocksections and AOSystem.RouteIsOpened(v.deproute) then 
 					if not v.aoroute or v.aoroute == "" then return end
 					checksignals = v.depsignals
+					if checksignals == nil or checksignals == {} then return end
 					if not AOSystem.CheckDependSignals(checksignals) then return end
 					if v.opened == false then
 						AOSystem.OpenRoute(v.aoroute)
@@ -63,7 +69,7 @@ hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
 							v.opened = true
 							timer.Simple(5, function() ply:ChatPrint("Высаживайте пассажиров и следуйте под оборот.") end)
 						end
-					elseif station != tbl then
+					elseif v.main_control and station != tbl then
 						if not v.aoroute_main or v.aoroute_main == "" then return end
 						checksignals = v.depsignals_main
 						if not AOSystem.CheckDependSignals(checksignals) then return end
@@ -83,11 +89,11 @@ hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
 				if IsValid(Train) then
 					ply = AOSystem.GetTrainDriver(Train)
 				end
-				if Signal.Occupied and AOSystem.GetSignalFreeBS(v.checksignal) > v.blocksections then 
+				if Signal.Occupied then 
 					if not v.aoroute or v.aoroute == "" then return end
 					checksignals = v.depsignals
 					if not AOSystem.CheckDependSignals(checksignals) then return end
-					if v.opened == false then
+					if v.opened == false and AOSystem.GetSignalFreeBS(v.checksignal) > v.blocksections then
 						AOSystem.OpenRoute(v.aoroute)
 						v.opened = true
 						timer.Simple(5, function() ply:ChatPrint("Отправляйтесь по готовности или \nзакройте маршрут "..v.aoroute) end)

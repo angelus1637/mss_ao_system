@@ -17,7 +17,7 @@ timer.Create("AOSystemInit", 2, 1, function()
 		local tbl = fl and util.JSONToTable(fl) or {}
 		AOSystem.Stations = tbl
 		if table.IsEmpty(AOSystem.Stations) then 
-			MsgC(Color(0, 220, 0, 255), "MSS AO: Data file corrupted.\nLoad failed! \n")
+			MsgC(Color(220, 0, 0, 255), "MSS AO: Data file corrupted.\nLoad failed! \n")
 			return
 		else
 			MsgC(Color(0, 220, 0, 255), "MSS AO: Data file detected.\nLoad successful! \n")
@@ -29,9 +29,9 @@ timer.Create("AOSystemInit", 2, 1, function()
 	-- грузим логику
 	if file.Exists("mss_ao_system/maps/sv_maps_logic.lua", "LUA") then
 		include("mss_ao_system/maps/sv_maps_logic.lua")
-		MsgC(Color(0, 220, 0, 255), "MSS AO: logic file detected.\nInit successful! \n")
+		MsgC(Color(0, 220, 0, 255), "MSS AO: logic file detected.\nLoad successful! \n")
 	else
-		MsgC(Color(220, 0, 0, 255), "MSS AO: No logic file detected\nInit failed! \n")
+		MsgC(Color(220, 0, 0, 255), "MSS AO: No logic file detected\nLoad failed! \n")
 		return
 	end
 	-- грузим костыли
@@ -134,10 +134,9 @@ concommand.Add("aosystem_enable", function(ply, _, args)
 end)
 
 function AOSystem.CheckDependSignals(signals)
-	if signals == nil or signals == {} then return false end
 	local checked = true
 	for k, v in pairs(signals) do
-		if Metrostroi.SignalEntitiesByName[v].Occupied then
+		if Metrostroi.SignalEntitiesByName[v] and Metrostroi.SignalEntitiesByName[v].Occupied then
 			checked = false
 		end
 	end
@@ -229,6 +228,7 @@ function AOSystem.RouteIsOpened(RouteName)
 		if signal.Routes then
 			for RouteID, RouteInfo in pairs(signal.Routes) do
 				if RouteInfo.RouteName and RouteInfo.RouteName:upper() == RouteName then
+					--if (RouteInfo.Switches and AOSystem.CheckSwitchesStates(RouteInfo.Switches) and signal.LastOpenedRoute and signal.LastOpenedRoute == RouteID)) or signal.Route == RouteID then
 					if (RouteInfo.Switches and AOSystem.CheckSwitchesStates(RouteInfo.Switches)) or (signal.LastOpenedRoute and signal.LastOpenedRoute == RouteID) or signal.Route == RouteID then
 						Opened = true
 					end

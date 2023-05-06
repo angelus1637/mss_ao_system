@@ -10,7 +10,11 @@
 * Agent Smith: https://steamcommunity.com/profiles/76561197990364979
 * Alexell: https://steamcommunity.com/profiles/76561198210303223	
 
-**Оригинальный аддон в Steam Workshop:** ТВА
+**Оригинальный аддон в Steam Workshop:** 
+*ТВА
+
+**Сайт проекта:**
+* https://mss-project.org/
 
 **Основной функционал:**
 * Система основана на отслеживании рельсовых цепей и светофоров на путях
