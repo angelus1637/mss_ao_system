@@ -11,7 +11,7 @@
 * Alexell: https://steamcommunity.com/profiles/76561198210303223	
 
 **Оригинальный аддон в Steam Workshop:** 
-*ТВА
+* ТВА
 
 **Сайт проекта:**
 * https://mss-project.org/
