@@ -136,7 +136,7 @@ end)
 function AOSystem.CheckDependSignals(signals)
 	local checked = true
 	for k, v in pairs(signals) do
-		if Metrostroi.SignalEntitiesByName[v] and Metrostroi.SignalEntitiesByName[v].Occupied then
+		if not IsValid(Metrostroi.SignalEntitiesByName[v]) or Metrostroi.SignalEntitiesByName[v].Occupied then
 			checked = false
 		end
 	end
@@ -157,16 +157,12 @@ function AOSystem.CloseRoute(RouteName)
 					found = true
 					if ent.LastOpenedRoute and ent.LastOpenedRoute == RouteID then
 						ent:CloseRoute(RouteID)
-						ent.LastOpenedRoute = -1
 						closed = true	
 					end
 				end
 			end
 		end
 	end	
-	if found and closed then
-		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Сброс маршрута "..RouteName.."")
-	end
 end
 
 function AOSystem.OpenRoute(RouteName)
@@ -179,7 +175,7 @@ function AOSystem.OpenRoute(RouteName)
 				if RouteInfo.RouteName and RouteInfo.RouteName:upper() == RouteName then
 					found = true
 					if ent.Route != RouteID or not RouteInfo.IsOpened then
-						AOSystem.SetSwitchesToRoute(RouteInfo.Switches)
+						if RouteInfo.Switches and RouteInfo.Switches != "" then AOSystem.SetSwitchesToRoute(RouteInfo.Switches) end
 						if RouteInfo.Manual then
 							timer.Create("OpenDelayTimer", 6, 1, function()
 								ent:OpenRoute(RouteID)
@@ -191,12 +187,9 @@ function AOSystem.OpenRoute(RouteName)
 			end
 		end
 	end
-	if found and opened then
-		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Готовится маршрут "..RouteName.."")
-	end	
 end
 
-function AOSystem.SetSwitchState(switch,state) --switch = entity, state ="alt" or "main"}
+function AOSystem.SetSwitchState(switch, state) --switch = entity, state ="alt" or "main"}
 	if IsValid(switch) then 
 		switch:SendSignal(state, nil, true)
 	end
@@ -205,7 +198,7 @@ end
 -- ent:GetInternalVariable("m_eDoorState") or -1
 -- m_eDoorState: 0 - закрыта, 1 - открывается, 2 - открыта, 3 - закрывается.
 function AOSystem.SetSwitchesToRoute(switches)
-	if switches == nil then return end
+	if switches == "" then return end
 	switches = string.Explode(",",switches)
 	for k, v in pairs(switches) do
 		local statedesired = v:sub(-1,-1)
@@ -229,7 +222,7 @@ function AOSystem.RouteIsOpened(RouteName)
 			for RouteID, RouteInfo in pairs(signal.Routes) do
 				if RouteInfo.RouteName and RouteInfo.RouteName:upper() == RouteName then
 					--if (RouteInfo.Switches and AOSystem.CheckSwitchesStates(RouteInfo.Switches) and signal.LastOpenedRoute and signal.LastOpenedRoute == RouteID)) or signal.Route == RouteID then
-					if (RouteInfo.Switches and AOSystem.CheckSwitchesStates(RouteInfo.Switches)) or (signal.LastOpenedRoute and signal.LastOpenedRoute == RouteID) or signal.Route == RouteID then
+					if (RouteInfo.Switches != "" and AOSystem.CheckSwitchesStates(RouteInfo.Switches)) or (signal.LastOpenedRoute and signal.LastOpenedRoute == RouteID) or signal.Route == RouteID then
 						Opened = true
 					end
 				end
@@ -241,7 +234,7 @@ end
 
 function AOSystem.CheckSwitchesStates(switches)
 	local checked = true
-	if switches == nil then return end
+	if switches == "" then return end
 	switches = string.Explode(",",switches)
 	for k, v in pairs(switches) do
 		local switchname = v:sub(1,-2)

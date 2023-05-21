@@ -89,4 +89,19 @@ if Map:find("neocrimson_line_a") then
 	end)
 end
 
---lua_run for k, v in pairs(ents.FindByClass("func_button")) do print(v:GetName()) end
+if Map:find("chapaevskaya_line_a") then 
+	function SetSwitchState(switch,state) --switch = entity, state ="alt" or "main"}
+		if IsValid(switch) then 
+			switch:SendSignal(state, nil, true)
+			print("-- Switch "..switch.Name.." is set to "..state)
+		end
+	end
+
+	timer.Simple(10, function()
+		print("-- Fixing switches' states ...")
+		for k, v in pairs(ents.FindByClass("gmod_track_switch")) do
+			if v.Name == "d1" or v.Name == "d2" then SetSwitchState(v, "main") end
+		end
+		print("-- All switches are set to main !")
+	end)
+end
