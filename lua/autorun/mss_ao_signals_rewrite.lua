@@ -7,8 +7,8 @@ hook.Add("InitPostEntity", "MSS.SignalsRewrite", function()
         hook.Run("AOSystemTrigger", self, self.OccupiedByNow)
     end
     local cls_route = ENT.CloseRoute
-    function ENT:CloseRoute()
-        cls_route(self)
-        self.LastOpenedRoute = nil
-    end
+    -- function ENT:CloseRoute()
+        -- cls_route(self)
+        -- self.LastOpenedRoute = nil
+    -- end
 end)

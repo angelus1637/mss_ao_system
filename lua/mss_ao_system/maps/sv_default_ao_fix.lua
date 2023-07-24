@@ -33,6 +33,12 @@ if Map:find("nekrasovskaya") then
 end
 
 if Map:find("virus") then 	
+	function SetSwitchState(switch,state) --switch = entity, state ="alt" or "main"}
+		if IsValid(switch) then 
+			switch:SendSignal(state, nil, true)
+			print("-- Switch "..switch.Name.." is set to "..state)
+		end
+	end
 
 	timer.Simple(11, function()
 		print("-- Disabling default AO on map ...")

@@ -35,15 +35,17 @@ hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
 		if v.aotype == "by-block-sections" then
 			if Signal.Name == v.trigger then
 				if not v.deproute or v.aoroute == "" then return end
-				if AOSystem.GetSignalFreeBS(v.trigger) < v.blocksections and AOSystem.RouteIsOpened(v.deproute) then 
-					if not v.aoroute or v.aoroute == "" then return end
-					checksignals = v.depsignals
-					if checksignals == nil or checksignals == {} then return end
-					if not AOSystem.CheckDependSignals(checksignals) then return end
-					if v.opened == false then
-						AOSystem.OpenRoute(v.aoroute)
-						ULib.tsayColor(nil, false, Color(0, 225, 0), "MSS АО: Готовится маршрут "..v.aoroute..".")
-						v.opened = true
+				if AOSystem.GetSignalFreeBS(v.trigger) < v.blocksections then 
+					if AOSystem.RouteIsOpened(v.deproute) then
+						if not v.aoroute or v.aoroute == "" then return end
+						checksignals = v.depsignals
+						if checksignals == nil or checksignals == {} then return end
+						if not AOSystem.CheckDependSignals(checksignals) then return end
+						if v.opened == false then
+							AOSystem.OpenRoute(v.aoroute)
+							ULib.tsayColor(nil, false, Color(0, 225, 0), "MSS АО: Готовится маршрут "..v.aoroute..".")
+							v.opened = true
+						end
 					end
 				else
 					v.opened = false

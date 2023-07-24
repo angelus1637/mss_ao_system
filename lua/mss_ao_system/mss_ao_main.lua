@@ -157,7 +157,8 @@ function AOSystem.CloseRoute(RouteName)
 					found = true
 					if ent.LastOpenedRoute and ent.LastOpenedRoute == RouteID then
 						ent:CloseRoute(RouteID)
-						closed = true	
+						closed = true
+						ent.LastOpenedRoute = nil
 					end
 				end
 			end
@@ -198,11 +199,12 @@ end
 -- ent:GetInternalVariable("m_eDoorState") or -1
 -- m_eDoorState: 0 - закрыта, 1 - открывается, 2 - открыта, 3 - закрывается.
 function AOSystem.SetSwitchesToRoute(switches)
-	if switches == "" then return end
+	if not switches or switches == "" then return end
 	switches = string.Explode(",",switches)
 	for k, v in pairs(switches) do
 		local statedesired = v:sub(-1,-1)
 		local switchname = v:sub(1,-2)
+		if switchname == "" then continue end
 		local switchent = Metrostroi.GetSwitchByName(switchname)
 		if not IsValid(switchent) then continue end
 		local statereal = switchent:GetInternalVariable("m_eDoorState") or -1
@@ -234,7 +236,7 @@ end
 
 function AOSystem.CheckSwitchesStates(switches)
 	local checked = true
-	if switches == "" then return end
+	if not switches or switches == "" then return end
 	switches = string.Explode(",",switches)
 	for k, v in pairs(switches) do
 		local switchname = v:sub(1,-2)
