@@ -42,95 +42,60 @@ timer.Create("AOSystemInit", 2, 1, function()
 		MsgC(Color(220, 0, 0, 255), "MSS AO: No additional file detected\nInit failed! \n")
 		return
 	end
-	SetGlobalBool("AOSystemIsDisabled", false)
+	SetGlobalBool("AOSystemIsEnabled", true)
 	SetGlobalBool("AOSystemAutoReset", true)
+	hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
 end)
 
+-- Состояние автосброса
 util.AddNetworkString("ao_reset_sync")
-
--- Обмен данных
 net.Receive("ao_reset_sync", function(ln,ply)
 	local reset_old = GetGlobalBool("AOSystemAutoReset")
-	local reset_new = tobool(net.ReadString())
-	if reset_new ~= reset_old then
-		if ply:IsAdmin() then
-			SetGlobalBool("AOSystemAutoReset", reset_new)
-			if reset_new then
-				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс включен")
-			else
-				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс отключен")
-			end
-			net.Start("ao_reset_sync")
-			if reset_new then
-				net.WriteString("1")
-			else
-				net.WriteString("0")
-			end
-			net.Broadcast()
+	local reset_new = net.ReadBool()
+	if reset_new == reset_old then return end
+	if AOSystem.AccessGranted(ply) then
+		SetGlobalBool("AOSystemAutoReset", reset_new)
+		if reset_new then
+			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс включен")
 		else
-			if reset_old then
-				ply:ConCommand("ao_autoreset 1")
-			else
-				ply:ConCommand("ao_autoreset 0")
-			end
-			ULib.tsayError(ply, "У вас нет доступа к этой команде!" )
+			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс отключен")
 		end
-	end
-end)
-
--- Синхронизация ao_autoreset у новых клиентов
-hook.Add("PlayerInitialSpawn","AOSystemSetParams",function(ply)
-	local res = GetGlobalBool("AOSystemAutoReset")
-	if res then
-		ply:ConCommand("ao_autoreset 1")
-	else
-		ply:ConCommand("ao_autoreset 0")
 	end
 end)
 
 -- Автосброс состояния АО при отсутствии на сервере игроков с доступом к настройкам АО
-hook.Add("PlayerDisconnected","AOSystemResert",function(ply)
-	if GetGlobalBool("AOSystemAutoReset") then
-		if GetGlobalBool("AOSystemIsDisabled") then
-			local admins = false
-			for k, v in pairs(player.GetHumans()) do
-				if v == ply then continue end
-				if v:IsAdmin() or v.DispPost then admins = true end
-			end
-			if not admins then
-				SetGlobalBool("AOSystemIsDisabled", false)
-				for k, v in pairs(AOSystem.Stations) do
-					if v.enabled == false then v.enabled = true end
-				end		
-				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
-			end
+hook.Add("PlayerDisconnected","AOSystemReset",function(ply)
+	if not GetGlobalBool("AOSystemAutoReset") then return end
+	if GetGlobalBool("AOSystemIsEnabled") then return end
+	local admins = false
+	for k, v in pairs(player.GetHumans()) do
+		if v == ply then continue end
+		if AOSystem.AccessGranted(v) then admins = true end
+	end
+	if admins then return end
+	SetGlobalBool("AOSystemIsEnabled", false)
+	for k, v in pairs(AOSystem.Stations) do
+		if v.enabled == false then v.enabled = true end
+	end		
+	ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
+end)
+
+-- Глобальное состояние АО
+util.AddNetworkString("ao_state_sync")
+net.Receive("ao_state_sync", function(ln,ply)
+	local state_old = GetGlobalBool("AOSystemIsEnabled")
+	local state_new = net.ReadBool()
+	if state_new == state_old then return end
+	if AOSystem.AccessGranted(ply) then
+		SetGlobalBool("AOSystemIsEnabled", state_new)
+		if state_new then
+			hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
+			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
+		else
+			hook.Remove("AOSystemTrigger", "MSS.AOTriggers")
+			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Отключен")
 		end
 	end
-end)
-
--- Команды на вкл/выкл АО
-concommand.Add("aosystem_disable", function(ply, _, args)
-	if ply:IsAdmin() or ply.DispPost then
-        SetGlobalBool("AOSystemIsDisabled", true)
-		for k, v in pairs(AOSystem.Stations) do
-			if v.enabled == true then v.enabled = false end
-		end		
-		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Отключен")
-	else
-		ULib.tsayError(ply, "У вас нет доступа к этой команде!" )
-    end
-end)
-
-concommand.Add("aosystem_enable", function(ply, _, args)
-	if ply:IsAdmin() or ply.DispPost then
-        SetGlobalBool("AOSystemIsDisabled", false)
-		for k, v in pairs(AOSystem.Stations) do
-			if v.enabled == false then v.enabled = true end
-		end		
-		ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
-	else
-		ULib.tsayError(ply, "У вас нет доступа к этой команде!" )
-    end
 end)
 
 function AOSystem.CheckDependSignals(signals)

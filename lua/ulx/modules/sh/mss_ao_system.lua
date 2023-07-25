@@ -1,12 +1,12 @@
-return
---[[if CLIENT then return end
+if CLIENT then return end
 local CATEGORY_NAME = "Metrostroi"
 
-ULib.ucl.registerAccess("ao_system_settings", ULib.ACCESS_ADMIN, "AOSystem Settings", CATEGORY_NAME)
+AOSystem = AOSystem or {}
 function AOSystem.AccessGranted(ply)
-	if (IsValid(ply) and ULib.ucl.query(ply,"ao_system_settings")) then
+	if not IsValid(ply) then return false end
+	if (ply:IsAdmin() or ply:GetNW2Bool("MDispatcher") or ULib.ucl.query(ply, "ulx disp")) then
 		return true
 	else
 		return false
 	end
-end ]]
+end

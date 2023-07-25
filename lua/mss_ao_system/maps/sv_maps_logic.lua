@@ -7,8 +7,7 @@
 
 if CLIENT then return end
 
-hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
-
+function AOSystem.MapLogic(Signal,Train)
 	local checksignals
 	local station
 	local tbl
@@ -123,4 +122,4 @@ hook.Add("AOSystemTrigger", "MSS.AOTriggersNew", function(Signal,Train)
 			end
 		end
 	end
-end)
+end
