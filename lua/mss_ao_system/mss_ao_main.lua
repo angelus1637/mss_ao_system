@@ -45,22 +45,7 @@ timer.Create("AOSystemInit", 2, 1, function()
 	SetGlobalBool("AOSystemIsEnabled", true)
 	SetGlobalBool("AOSystemAutoReset", true)
 	hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
-end)
-
--- Состояние автосброса
-util.AddNetworkString("ao_reset_sync")
-net.Receive("ao_reset_sync", function(ln,ply)
-	local reset_old = GetGlobalBool("AOSystemAutoReset")
-	local reset_new = net.ReadBool()
-	if reset_new == reset_old then return end
-	if AOSystem.AccessGranted(ply) then
-		SetGlobalBool("AOSystemAutoReset", reset_new)
-		if reset_new then
-			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс включен")
-		else
-			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс отключен")
-		end
-	end
+	util.AddNetworkString("AOSystem.Commands")
 end)
 
 -- Автосброс состояния АО при отсутствии на сервере игроков с доступом к настройкам АО
@@ -80,23 +65,79 @@ hook.Add("PlayerDisconnected","AOSystemReset",function(ply)
 	ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
 end)
 
--- Глобальное состояние АО
-util.AddNetworkString("ao_state_sync")
-net.Receive("ao_state_sync", function(ln,ply)
-	local state_old = GetGlobalBool("AOSystemIsEnabled")
-	local state_new = net.ReadBool()
-	if state_new == state_old then return end
-	if AOSystem.AccessGranted(ply) then
-		SetGlobalBool("AOSystemIsEnabled", state_new)
-		if state_new then
-			hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
-			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
-		else
-			hook.Remove("AOSystemTrigger", "MSS.AOTriggers")
-			ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Отключен")
+-- Синхронизация команд
+net.Receive("AOSystem.Commands",function(ln,ply)
+	if not IsValid(ply) then return end
+	local comm = net.ReadString()
+	if comm == "global-state" then
+		local state_old = GetGlobalBool("AOSystemIsEnabled")
+		local state_new = net.ReadBool()
+		if state_new == state_old then return end
+		if AOSystem.AccessGranted(ply) then
+			SetGlobalBool("AOSystemIsEnabled", state_new)
+			if state_new then
+				hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
+				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Включен")
+			else
+				hook.Remove("AOSystemTrigger", "MSS.AOTriggers")
+				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Отключен")
+			end
 		end
+	elseif comm == "reset-state" then
+		local reset_old = GetGlobalBool("AOSystemAutoReset")
+		local reset_new = net.ReadBool()
+		if AOSystem.AccessGranted(ply) then
+			SetGlobalBool("AOSystemAutoReset", reset_new)
+			if reset_new then
+				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс включен")
+			else
+				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс отключен")
+			end
+		end
+	elseif comm == "s-state" then
+		id = net.ReadInt(10)
+		state = net.ReadBool()
+		AOSystem.Stations[id].enabled = state
+	elseif comm == "s-add" then
+		local ln = net.ReadUInt(32)
+		local data = util.JSONToTable(util.Decompress(net.ReadData(ln)))
+		table.insert(AOSystem.Stations, data)
+		AOSystem.ShowMenu(ply)
+	elseif comm == "s-remove" then
+		id = net.ReadInt(10)
+		table.remove(AOSystem.Stations,id)
+	elseif comm == "s-edit" then
+		id = net.ReadInt(10)
+		local ln = net.ReadUInt(32)
+		local data = util.JSONToTable(util.Decompress(net.ReadData(ln)))
+		AOSystem.Stations[id] = data
+		AOSystem.ShowMenu(ply)
+	elseif comm == "reload" then
+		if file.Exists("mss_ao_system/"..cur_map..".txt", "DATA") then
+			local fl = file.Read("mss_ao_system/"..cur_map..".txt", "DATA")
+			local tbl = fl and util.JSONToTable(fl) or {}
+			AOSystem.Stations = tbl
+			AOSystem.ShowMenu(ply)
+		end
+	elseif comm == "save" then
+		local ln = net.ReadUInt(32)
+		local data = util.JSONToTable(util.Decompress(net.ReadData(ln)))
+		AOSystem.Stations = data
+		file.Write("mss_ao_system/"..cur_map..".txt",util.TableToJSON(AOSystem.Stations,true))
 	end
 end)
+
+-- Запуск меню
+function AOSystem.ShowMenu(ply)
+	if not AOSystem.AccessGranted(ply) then return end
+	net.Start("AOSystem.Commands")
+		net.WriteString("menu")
+		data = util.Compress(util.TableToJSON(AOSystem.Stations))
+		local ln = #data
+		net.WriteUInt(ln,32)
+		net.WriteData(data,ln)
+	net.Send(ply)
+end
 
 function AOSystem.CheckDependSignals(signals)
 	local checked = true

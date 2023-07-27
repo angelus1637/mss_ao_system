@@ -5,8 +5,6 @@
 --  https://steamcommunity.com/profiles/76561197990364979	--
 --------------------------------------------------------------
 
-if CLIENT then return end
-
 function AOSystem.MapLogic(Signal,Train)
 	local checksignals
 	local station
