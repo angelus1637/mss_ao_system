@@ -1,4 +1,4 @@
-# MSS AO System v1.0 (RU)
+# MSS AO System v1.1 (RU)
 
 ![MSS AO System]()
 
