@@ -12,7 +12,7 @@ local cur_map = game.GetMap()
 
 timer.Create("AOSystemInit", 2, 1, function()
 	-- грузим данные
-	if file.Exists("mss_ao_system/"..cur_map..".txt", "DATA") then		
+	if file.Exists("mss_ao_system/"..cur_map..".txt", "DATA") then
 		local fl = file.Read("mss_ao_system/"..cur_map..".txt", "DATA")
 		local tbl = fl and util.JSONToTable(fl) or {}
 		AOSystem.Stations = tbl
@@ -35,12 +35,11 @@ timer.Create("AOSystemInit", 2, 1, function()
 		return
 	end
 	-- грузим костыли
-	if file.Exists("mss_ao_system/maps/sv_default_ao_fix.lua", "LUA") then
-		include("mss_ao_system/maps/sv_default_ao_fix.lua")
+	if file.Exists("mss_ao_system/maps/fix_"..cur_map..".lua", "LUA") then
+		include("mss_ao_system/maps/fix_"..cur_map..".lua")
 		MsgC(Color(0, 220, 0, 255), "MSS AO: additional file detected.\nInit successful! \n")
 	else
-		MsgC(Color(220, 0, 0, 255), "MSS AO: No additional file detected\nInit failed! \n")
-		return
+		MsgC(Color(220, 0, 0, 255), "MSS AO: No additional file detected.\nNothing to fix! \n")
 	end
 	SetGlobalBool("AOSystemIsEnabled", true)
 	SetGlobalBool("AOSystemAutoReset", true)
