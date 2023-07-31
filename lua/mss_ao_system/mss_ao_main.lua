@@ -82,7 +82,13 @@ net.Receive("AOSystem.Commands",function(ln,ply)
 				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Отключен")
 			end
 		end
-	elseif comm == "reset-state" then
+	elseif comm == "s-state" then
+		id = net.ReadInt(10)
+		state = net.ReadBool()
+		AOSystem.Stations[id].enabled = state
+	end
+	if not ply:IsAdmin() then return end
+	if comm == "reset-state" then
 		local reset_old = GetGlobalBool("AOSystemAutoReset")
 		local reset_new = net.ReadBool()
 		if AOSystem.AccessGranted(ply) then
@@ -93,10 +99,6 @@ net.Receive("AOSystem.Commands",function(ln,ply)
 				ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Автосброс отключен")
 			end
 		end
-	elseif comm == "s-state" then
-		id = net.ReadInt(10)
-		state = net.ReadBool()
-		AOSystem.Stations[id].enabled = state
 	elseif comm == "s-add" then
 		local ln = net.ReadUInt(32)
 		local data = util.JSONToTable(util.Decompress(net.ReadData(ln)))

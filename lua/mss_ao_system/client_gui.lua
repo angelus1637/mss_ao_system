@@ -496,6 +496,7 @@ local function ShowMenu(data)
 	savebtn:SetSize(185,25)
 	savebtn:SetPos((AOSystem.Frame:GetWide()-10)-185,215)
 	savebtn:SetText("Сохранить в файл")
+	if not LocalPlayer():IsAdmin() then savebtn:SetEnabled(false) end
 	function savebtn:DoClick()
 		net.Start("AOSystem.Commands")
 			net.WriteString("save")
@@ -525,6 +526,7 @@ local function ShowMenu(data)
 	resetbox:SetText("Автовозврат АО включен")
 	resetbox:SizeToContents()	
 	resetbox:SetChecked(GetGlobalBool("AOSystemAutoReset"))
+	if not LocalPlayer():IsAdmin() then resetbox:SetEnabled(false) end
 	function resetbox:OnChange(val)
 		net.Start("AOSystem.Commands")
 			net.WriteString("reset-state")
@@ -575,21 +577,24 @@ local function ShowMenu(data)
 					row:SetColumnText(2, "вкл")
 				end):SetIcon("icon16/accept.png")
 			end
-			menu:AddSpacer()
+			
 		end
-		menu:AddOption("Редактировать", function()
-			if not row:IsValid() then return end
-			ShowEditMenu(data[row_id], true, row_id)
-		end):SetIcon("icon16/pencil.png")
-		menu:AddOption("Удалить", function()
-			if not row:IsValid() then return end
-			table.remove(data,row_id)
-			aolist:RemoveLine(row_id)
-			net.Start("AOSystem.Commands")
-				net.WriteString("s-remove")
-				net.WriteInt(row_id, 10)
-			net.SendToServer()
-		end):SetIcon("icon16/cross.png")
+		if LocalPlayer():IsAdmin() then
+			menu:AddSpacer()
+			menu:AddOption("Редактировать", function()
+				if not row:IsValid() then return end
+				ShowEditMenu(data[row_id], true, row_id)
+			end):SetIcon("icon16/pencil.png")
+			menu:AddOption("Удалить", function()
+				if not row:IsValid() then return end
+				table.remove(data,row_id)
+				aolist:RemoveLine(row_id)
+				net.Start("AOSystem.Commands")
+					net.WriteString("s-remove")
+					net.WriteInt(row_id, 10)
+				net.SendToServer()
+			end):SetIcon("icon16/cross.png")
+		end
 		menu:Open()
 	end
 
@@ -597,6 +602,7 @@ local function ShowMenu(data)
 	addbtn:SetSize(185,25)
 	addbtn:SetPos(10,215)
 	addbtn:SetText("Добавить")
+	if not LocalPlayer():IsAdmin() then addbtn:SetEnabled(false) end
 	function addbtn:DoClick()
 		ShowEditMenu(data)
 	end
@@ -605,6 +611,7 @@ local function ShowMenu(data)
 	reloadbtn:SetSize(170,25)
 	reloadbtn:SetPos((AOSystem.Frame:GetWide()/2)-85,250)
 	reloadbtn:SetText("Перезагрузить из файла")
+	if not LocalPlayer():IsAdmin() then reloadbtn:SetEnabled(false) end
 	function reloadbtn:DoClick()
 		net.Start("AOSystem.Commands")
 			net.WriteString("reload")
