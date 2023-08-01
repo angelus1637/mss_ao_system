@@ -25,7 +25,8 @@ local function ShowEditMenu(data, edit, edit_id)
 	end
 	frame:SetSize(190,h)
 	frame:Center()
-	frame:SetTitle("Добавить маршрут АО")
+	if edit then frame:SetTitle("Добавить маршрут АО")
+	else frame:SetTitle("Изменить маршрут АО") end
 	frame.btnMaxim:SetVisible(false)
 	frame.btnMinim:SetVisible(false)
 	frame:SetVisible(true)
@@ -581,7 +582,7 @@ local function ShowMenu(data)
 		end
 		if LocalPlayer():IsAdmin() then
 			menu:AddSpacer()
-			menu:AddOption("Редактировать", function()
+			menu:AddOption("Изменить", function()
 				if not row:IsValid() then return end
 				ShowEditMenu(data[row_id], true, row_id)
 			end):SetIcon("icon16/pencil.png")
