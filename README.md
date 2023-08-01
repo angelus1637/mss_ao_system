@@ -1,4 +1,4 @@
-# MSS AO System v1.1 (RU)
+# MSS AO System v1.2 (RU)
 
 ![MSS AO System](https://steamuserimages-a.akamaihd.net/ugc/2030612318538723774/A2BE3AF0446C21BF80EEA975DC86F5323667F903/?imw=5000&imh=5000&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false)
 
