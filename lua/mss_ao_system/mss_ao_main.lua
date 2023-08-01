@@ -11,6 +11,9 @@ AOSystem.Stations = {}
 local cur_map = game.GetMap()
 
 timer.Create("AOSystemInit", 2, 1, function()
+	SetGlobalBool("AOSystemIsEnabled", true)
+	SetGlobalBool("AOSystemAutoReset", true)
+	util.AddNetworkString("AOSystem.Commands")
 	-- грузим данные
 	if file.Exists("mss_ao_system/"..cur_map..".txt", "DATA") then
 		local fl = file.Read("mss_ao_system/"..cur_map..".txt", "DATA")
@@ -41,10 +44,7 @@ timer.Create("AOSystemInit", 2, 1, function()
 	else
 		MsgC(Color(220, 0, 0, 255), "MSS AO: No additional file detected.\nNothing to fix! \n")
 	end
-	SetGlobalBool("AOSystemIsEnabled", true)
-	SetGlobalBool("AOSystemAutoReset", true)
 	hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
-	util.AddNetworkString("AOSystem.Commands")
 end)
 
 -- Автосброс состояния АО при отсутствии на сервере игроков с доступом к настройкам АО
