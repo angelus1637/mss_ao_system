@@ -124,6 +124,9 @@ net.Receive("AOSystem.Commands",function(ln,ply)
 		local ln = net.ReadUInt(32)
 		local data = util.JSONToTable(util.Decompress(net.ReadData(ln)))
 		AOSystem.Stations = data
+		if not file.Exists("mss_ao_system", "DATA") then
+			file.CreateDir("mss_ao_system")
+		end
 		file.Write("mss_ao_system/"..cur_map..".txt",util.TableToJSON(AOSystem.Stations,true))
 	end
 end)
