@@ -274,6 +274,13 @@ function AOSystem.GetTrainDriver(train)
 	end	
 end
 
+local function StationIDbyName(name)
+	if not Metrostroi.StationConfigurations then return 1111 end
+	for k, v in pairs(Metrostroi.StationConfigurations) do
+		if name == v.names[1] then return tonumber(k) or 1111 end
+	end
+end
+
 function AOSystem.GetLastStationID(train)
 	local driver
 	local id = 1111
@@ -288,12 +295,12 @@ function AOSystem.GetLastStationID(train)
 
 				-- табло 81-722 не работает, ваще неясно почему...
 				if train.SarmatUPO and train.SarmatUPO.LastStationName then
-					id = MSS.StationIDByName(tostring(train.SarmatUPO.LastStationName)) 
+					id = StationIDbyName(tostring(train.SarmatUPO.LastStationName)) 
 				end
 
 				-- табло 81-760 не работает, когда строка с табло, не совпадает с названием станции в StationConfigurations
 				if train.BMCIS and train.RouteNumber.CurrentLastStation then
-					id = MSS.StationIDByName(train.RouteNumber.CurrentLastStation) 
+					id = StationIDbyName(train.RouteNumber.CurrentLastStation)
 				end
 				--ULib.tsayColor(nil,false,Color(0, 225, 0), "MSS АО: Конечная станция - "..id.."") 	-- отладочная строка!!!
 			end
