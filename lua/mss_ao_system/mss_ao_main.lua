@@ -253,11 +253,11 @@ function AOSystem.CheckSwitchesStates(switches)
 		local statedesired = v:sub(-1,-1)
 		local switchent = Metrostroi.GetSwitchByName(switchname)
 		if not IsValid(switchent) then continue end
-		local statereal = switchent:GetInternalVariable("m_eDoorState") or -1
-		if statedesired == "+" and statereal != 0 then
+		local statereal = switchent.AlternateTrack and -1 or 1
+		if statedesired == "+" and statereal != 1 then
 			checked = false
 		end
-		if statedesired == "-" and statereal != 2 then
+		if statedesired == "-" and statereal != -1 then
 			checked = false
 		end
 	end
