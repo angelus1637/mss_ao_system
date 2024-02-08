@@ -217,12 +217,12 @@ function AOSystem.SetSwitchesToRoute(switches)
 		if switchname == "" then continue end
 		local switchent = Metrostroi.GetSwitchByName(switchname)
 		if not IsValid(switchent) then continue end
-		local statereal = switchent:GetInternalVariable("m_eDoorState") or -1
-		if statedesired == "+" and statereal != 0 then
+		local statereal = switchent.AlternateTrack and -1 or 1
+		if statedesired == "+" and statereal != 1 then
 			AOSystem.SetSwitchState(switchent, "main")
 		end
-		if statedesired == "-" and statereal != 2 then
-			AOSystem.SetSwitchState(switchent, "alt")
+		if statedesired == "-" and statereal != -1 then
+			AOSystem.SetSwitchState(switchent, "main")
 		end
 	end
 end
