@@ -2,7 +2,7 @@ if CLIENT then return end
 
 local Map = game.GetMap()
 
-if Map:find("gm_metro_kalinin_v2") then 	
+if Map:find("gm_metro_kalinin_v3") then 	
 
 	timer.Simple(11, function()
 		print("-- Disabling default AO on map ...")
