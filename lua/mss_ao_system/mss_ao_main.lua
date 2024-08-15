@@ -222,7 +222,7 @@ function AOSystem.SetSwitchesToRoute(switches)
 			AOSystem.SetSwitchState(switchent, "main")
 		end
 		if statedesired == "-" and statereal != -1 then
-			AOSystem.SetSwitchState(switchent, "main")
+			AOSystem.SetSwitchState(switchent, "alt")
 		end
 	end
 end
