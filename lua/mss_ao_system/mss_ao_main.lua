@@ -47,6 +47,18 @@ timer.Create("AOSystemInit", 2, 1, function()
 	hook.Add("AOSystemTrigger", "MSS.AOTriggers", AOSystem.MapLogic)
 end)
 
+-- Запуск меню
+function AOSystem.ShowMenu(ply)
+	if not AOSystem.AccessGranted(ply) then return end
+	net.Start("AOSystem.Commands")
+		net.WriteString("menu")
+		data = util.Compress(util.TableToJSON(AOSystem.Stations))
+		local ln = #data
+		net.WriteUInt(ln,32)
+		net.WriteData(data,ln)
+	net.Send(ply)
+end
+
 -- Автосброс состояния АО при отсутствии на сервере игроков с доступом к настройкам АО
 hook.Add("PlayerDisconnected","AOSystemReset",function(ply)
 	if not GetGlobalBool("AOSystemAutoReset") then return end
@@ -130,18 +142,6 @@ net.Receive("AOSystem.Commands",function(ln,ply)
 		file.Write("mss_ao_system/"..cur_map..".txt",util.TableToJSON(AOSystem.Stations,true))
 	end
 end)
-
--- Запуск меню
-function AOSystem.ShowMenu(ply)
-	if not AOSystem.AccessGranted(ply) then return end
-	net.Start("AOSystem.Commands")
-		net.WriteString("menu")
-		data = util.Compress(util.TableToJSON(AOSystem.Stations))
-		local ln = #data
-		net.WriteUInt(ln,32)
-		net.WriteData(data,ln)
-	net.Send(ply)
-end
 
 function AOSystem.CheckDependSignals(signals)
 	local checked = true
